@@ -1,7 +1,7 @@
 import torch
 from omegaconf import OmegaConf
 from diffusers import StableDiffusionXLInpaintPipeline, AutoPipelineForInpainting
-from sam_stable_test.inpainting_pipe import InpaintingPipeline
+from inpainting_pipe import InpaintingPipeline
 
 
 class HuggingfacePipeline(InpaintingPipeline):
