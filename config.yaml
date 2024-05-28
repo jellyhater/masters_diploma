@@ -1,0 +1,9 @@
+sdxl:
+    checkpoint: SG161222/RealVisXL_V2.0
+    torch_dtype: fp32
+    use_safetensors: True
+
+kandi3:
+    checkpoint: SG161222/RealVisXL_V2.0
+    torch_dtype: fp32
+    use_safetensors: True
