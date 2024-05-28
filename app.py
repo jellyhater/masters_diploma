@@ -1,10 +1,11 @@
-import gradio as gr
-import numpy as np
 import torch
+import colorsys
+import numpy as np
+import gradio as gr
 from PIL import Image
 from segment_anything import SamPredictor, sam_model_registry, SamAutomaticMaskGenerator
-from diffusers import StableDiffusionXLInpaintPipeline
-import colorsys
+
+from huggingface_pipe import HuggingfacePipeline
 
 sam_checkpoint = "sam_vit_h_4b8939.pth"
 model_type = "vit_h"
@@ -15,13 +16,7 @@ sam.to(device=device)
 predictor = SamPredictor(sam)
 mask_generator = SamAutomaticMaskGenerator(sam)
 
-pipe = StableDiffusionXLInpaintPipeline.from_pretrained(
-    "SG161222/RealVisXL_V2.0",
-    torch_dtype=torch.float32,
-    # variant="fp16",
-    use_safetensors=True,
-)
-pipe = pipe.to(device)
+pipe = HuggingfacePipeline(model_name="sdxl").pipe
 
 
 with gr.Blocks() as demo:
