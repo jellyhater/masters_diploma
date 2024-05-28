@@ -1,6 +1,6 @@
 import torch
 from omegaconf import OmegaConf
-from diffusers import StableDiffusionXLInpaintPipeline, AutoPipelineForInpainting
+from diffusers import *
 from inpainting_pipe import InpaintingPipeline
 
 
