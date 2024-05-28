@@ -7,15 +7,12 @@ from inpainting_pipe import InpaintingPipeline
 class HuggingfacePipeline(InpaintingPipeline):
 
     def __init__(self, model_name):
-        super().__init__()
-
-        self.conf = OmegaConf.load("config.yaml")
-        
-        self.pipe = self.load_pipe(model_name)
+        super().__init__(model_name)
         self.pipe.to(self.device)
 
     def load_pipe(self, model_name):
-        conf = self.conf[model_name]
+        conf = OmegaConf.load("config.yaml")
+        conf = conf[model_name]
 
         dtype_map = {
             "fp16": torch.float16,
@@ -37,5 +34,5 @@ class HuggingfacePipeline(InpaintingPipeline):
 
 
 if __name__ == "__main__":
-    pipe = HuggingfacePipeline("kandi21")
+    pipe = HuggingfacePipeline("sdxl")
 
