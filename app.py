@@ -6,6 +6,7 @@ from PIL import Image
 from segment_anything import SamPredictor, sam_model_registry, SamAutomaticMaskGenerator
 
 from huggingface_pipe import HuggingfacePipeline
+from utils import poisson_blend
 
 sam_checkpoint = "sam_vit_h_4b8939.pth"
 model_type = "vit_h"
@@ -20,7 +21,7 @@ pipe = HuggingfacePipeline(model_name="sdxl").pipe
 
 
 with gr.Blocks() as demo:
-    gr.Markdown("# MPCard project: background generation")
+    gr.Markdown("# Master diploma: masked object generation")
     gr.Markdown(
         """
     To try the demo, upload an image and select object(s) you want to inpaint.
@@ -38,6 +39,7 @@ with gr.Blocks() as demo:
     with gr.Row():
         prompt_text = gr.Textbox(lines=1, label="Prompt")
         is_background = gr.Checkbox(label="Background")
+        smooth_results = gr.Checkbox(label="Poisson blending")
 
     with gr.Row():
         submit = gr.Button("Submit")
@@ -58,35 +60,26 @@ with gr.Blocks() as demo:
         if bg:
             mask = np.logical_not(mask)
         mask = Image.fromarray(mask[0, :, :])
-        segs = mask_generator.generate(image)
-        boolean_masks = [s["segmentation"] for s in segs]
-        finseg = np.zeros((boolean_masks[0].shape[0], boolean_masks[0].shape[1], 3), dtype=np.uint8)
-        # Loop over the boolean masks and assign a unique color to each class
-        for class_id, boolean_mask in enumerate(boolean_masks):
-            hue = class_id * 1.0 / len(boolean_masks)
-            rgb = tuple(int(i * 255) for i in colorsys.hsv_to_rgb(hue, 1, 1))
-            rgb_mask = np.zeros((boolean_mask.shape[0], boolean_mask.shape[1], 3), dtype=np.uint8)
-            rgb_mask[:, :, 0] = boolean_mask * rgb[0]
-            rgb_mask[:, :, 1] = boolean_mask * rgb[1]
-            rgb_mask[:, :, 2] = boolean_mask * rgb[2]
-            finseg += rgb_mask
 
         torch.cuda.empty_cache()
 
         return mask
 
-    def inpaint(image, mask, prompt):
+    def inpaint(image, mask, prompt, smooth_results):
         image = Image.fromarray(image)
-        mask = Image.fromarray(mask)
+        mask_image = Image.fromarray(mask)
 
         output = pipe(
             prompt=prompt,
             image=image,
-            mask_image=mask,
+            mask_image=mask_image,
             num_inference_steps=20,
-        ).images[0]
+        ).images
+
+        if smooth_results:
+            output = [poisson_blend(image, result, mask) for result in output]
         torch.cuda.empty_cache()
-        return output
+        return output[0]
 
     def _clear(sel_pix, img, mask, out, prompt, neg_prompt, bg):
         sel_pix = []
@@ -105,7 +98,7 @@ with gr.Blocks() as demo:
     )
     submit.click(
         inpaint,
-        inputs=[input_img, mask_img, prompt_text],
+        inputs=[input_img, mask_img, prompt_text, smooth_results],
         outputs=[output_img],
     )
     clear.click(

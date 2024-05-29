@@ -27,7 +27,7 @@ pipe_refiner = StableDiffusionXLImg2ImgPipeline.from_pretrained(
 
 
 with gr.Blocks() as demo:
-    gr.Markdown("# MPCard project: background generation")
+    gr.Markdown("# Master diploma: masked object generation")
     gr.Markdown(
         """
     To try the demo, upload an image and select object(s) you want to inpaint.
